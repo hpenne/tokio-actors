@@ -1,5 +1,5 @@
-use crate::interfaces::ControlA;
-use crate::messages::ControlAMsgs;
+use crate::interfaces::{ControlA, HelloEvent};
+use crate::messages::{ControlAMsgs, HelloEventMsgs};
 use async_trait::async_trait;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -36,6 +36,23 @@ pub async fn control_a_server_marshalling<T: ControlA>(msg: ControlAMsgs, target
         }
         ControlAMsgs::SayWorld => {
             target.say_world().await;
+        }
+    }
+}
+
+/// This could be generated
+#[async_trait]
+impl HelloEvent for ClientMarshaller<HelloEventMsgs> {
+    async fn hello_from(&mut self, sender: String) {
+        let _ = self.tx.send(HelloEventMsgs::HelloFrom { sender }).await;
+    }
+}
+
+/// This could be generated
+pub async fn hello_event_server_marshalling<T: HelloEvent>(msg: HelloEventMsgs, target: &mut T) {
+    match msg {
+        HelloEventMsgs::HelloFrom { sender } => {
+            target.hello_from(sender).await;
         }
     }
 }

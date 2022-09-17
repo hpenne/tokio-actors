@@ -6,10 +6,6 @@ pub enum ControlAMsgs {
     SayWorld,
 }
 
-//pub enum EventsAMsgs {
-//    HelloFromA,
-//}
-//
-//pub enum EventsBMsgs {
-//    HelloFromB,
-//}
+pub enum HelloEventMsgs {
+    HelloFrom { sender: String },
+}
