@@ -1,5 +1,5 @@
 use crate::interfaces::ControlA;
-use crate::{control_a_marshalling, ControlAMsgs};
+use crate::{control_a_server_marshalling, ControlAMsgs};
 use async_trait::async_trait;
 use tokio::sync::mpsc::Receiver;
 
@@ -11,24 +11,28 @@ impl CompA {
         tokio::spawn(async move {
             // ToDo: Should we instead let CompA hold CompAImpl as an Arc<Mutex<>>?
             // That will public sync methods outside the channel-protocols for setup etc.
-            let mut inner = CompAImpl {};
+            let mut inner = CompAImpl { count: 0 };
             while let Some(message) = rx.recv().await {
-                control_a_marshalling(&message, &mut inner).await;
+                control_a_server_marshalling(message, &mut inner).await;
             }
         });
         Self {}
     }
 }
 
-pub struct CompAImpl {}
+pub struct CompAImpl {
+    count: usize,
+}
 
 #[async_trait]
 impl ControlA for CompAImpl {
-    async fn say_hello(&mut self) {
+    async fn say_hello(&mut self) -> usize {
         print!("Hello ");
+        self.count += 1;
+        self.count
     }
 
     async fn say_world(&mut self) {
-        print!("world!");
+        println!("world!");
     }
 }

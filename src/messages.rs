@@ -1,6 +1,8 @@
+use tokio::sync::oneshot::Sender;
+
 #[derive(Debug)]
 pub enum ControlAMsgs {
-    SayHello,
+    SayHello { response_tx: Sender<usize> },
     SayWorld,
 }
 
