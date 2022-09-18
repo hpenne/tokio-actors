@@ -19,6 +19,8 @@ This allows the client to call on a trait function instead of doing all the low 
 The hope is that the trait definition can at some point be used to code generate the enum and the marshalling code.
 This is not cost-effective for a small prototype, but will pay off in a larger design.
 
+The design also has the nice property of cleanly separating a component into two structs: One outer struct that handles message processing and tasks management (pure infrastructure/boilerplate code) and the actual implementation (which is 100% free from boilerplate code and messaging).
+
 == ToDos
 
 Investigate shutdown in more detail.

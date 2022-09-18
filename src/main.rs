@@ -14,14 +14,15 @@ use std::time;
 
 #[tokio::main]
 async fn main() {
-    let (b_client_port, b_server_rx) = connection::<HelloEventMsgs>();
-    let (mut a_client_port, a_server_rx) = connection::<ControlAMsgs>();
-    let _b = CompB::new(b_server_rx);
-    let _a = CompA::new(a_server_rx, b_client_port);
+    let (hello_client_for_b, b_hello_server_rx) = connection::<HelloEventMsgs>();
+    let (hello_client_for_a, a_hello_server_rx) = connection::<HelloEventMsgs>();
+    let (mut ctrl_client_for_a, a_ctrl_server_rx) = connection::<ControlAMsgs>();
+    let _a = CompA::new(a_ctrl_server_rx, a_hello_server_rx, hello_client_for_b);
+    let _b = CompB::new(b_hello_server_rx, hello_client_for_a);
 
-    a_client_port.say_hello().await;
-    let count = a_client_port.say_hello().await;
-    a_client_port.say_world();
+    ctrl_client_for_a.say_hello().await;
+    let count = ctrl_client_for_a.say_hello().await;
+    ctrl_client_for_a.say_world();
 
     tokio::time::sleep(time::Duration::from_millis(500)).await;
     println!("Count is {}", count);
