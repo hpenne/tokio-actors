@@ -21,6 +21,21 @@ This is not cost-effective for a small prototype, but will pay off in a larger d
 
 The design also has the nice property of cleanly separating a component into two structs: One outer struct that handles message processing and tasks management (pure infrastructure/boilerplate code) and the actual implementation (which is 100% free from boilerplate code and messaging).
 
+== Component topology
+
+The `main()` function creates two components of types CompA and CompB. CompA has a control interface/trait/channel (ControlA) used by main with a `say_hello()` method.  CompA is connected to CompB using the HelloEvent interface, and CompB is connected back to CompA using an interface of the same type.
+
+When `main()` calls `ControlA::say_hello()`, CompA prints "Hello" and calls `HelloEvent::hello_from()` on CompB.  This makes CompB print "B: Hello from A" and call `HelloEvent::hello_from()` on CompA, which in turn prints "A: Hello from B".  The circular nature of the call is intended to catch any deadlocks caused by a bad implementation.
+
+== Results
+
+The design seems to work well.
+The use of channels processes by a single actor ensure that messages passed on the same channel are processed in order.
+
+The code was fairly straight forward to write with little need to "fight" the rules checker. Once the boilerplate code is in place the actual component logic can be implemented in the inner struct without any concern for the message passing.
+
+Code generation can probably be used to eliminate much of the boilerplate code.
+
 == ToDos
 
 Investigate shutdown in more detail.
