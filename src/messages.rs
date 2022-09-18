@@ -1,3 +1,4 @@
+//! The message types here could be generated from the traits.
 use tokio::sync::oneshot::Sender;
 
 #[derive(Debug)]

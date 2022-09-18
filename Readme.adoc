@@ -26,6 +26,7 @@ Is it possible for circular graphs to prevent proper shutdown?
 
 The code uses "unbounded" tokio channels. The send method for this is not async and we don't have to think about channel depth. The disadvantage is (perhaps) performance.
 We could consider using normal (bounded) channels. These provide back pressure, but send is async, which forces all "fire and forget" interface methods without return values to be async, which is very unfortunate from a semantic point of view (it will no longer be visible in the interface if the method blocks or not).
+Traits that do not contain async methods can be used easily from non-async code, which is also a notable advantage of unbounded channels.
 It seems that the semantic advantages of unbounded channels make them preferable as long as they are not prohibitively expensive.
 
 The only way to communicate with the actor implementation after it has started is through channels, as the message handling task owns it. If it is desirable to be able to call directly on it as well, then the outer struct and the task need to share ownership through an Arc<Mutex>, which has a performance impact.
