@@ -3,10 +3,12 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait ControlA {
     async fn say_hello(&mut self) -> usize;
-    async fn say_world(&mut self);
+
+    // Note that calls where we don't need to wait for the actor's task to process
+    // do not have to be marked async:
+    fn say_world(&mut self);
 }
 
-#[async_trait]
 pub trait HelloEvent {
-    async fn hello_from(&mut self, sender: String);
+    fn hello_from(&mut self, sender: String);
 }
