@@ -6,11 +6,9 @@ use tokio::sync::mpsc::Receiver;
 
 pub struct CompB {}
 
-/// ToDo: Shutdown (task should end on Drop).
 impl CompB {
     pub fn new(mut rx: Receiver<HelloEventMsgs>) -> Self {
         tokio::spawn(async move {
-            // ToDo: Should we instead let CompA hold CompAImpl as an Arc<Mutex<>>?
             // That will public sync methods outside the channel-protocols for setup etc.
             let mut inner = CompBImpl {};
             while let Some(message) = rx.recv().await {

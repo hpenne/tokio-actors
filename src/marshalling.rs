@@ -19,8 +19,10 @@ pub struct ClientMarshaller<T> {
 impl ControlA for ClientMarshaller<ControlAMsgs> {
     async fn say_hello(&mut self) -> usize {
         let (response_tx, response_rx) = oneshot::channel::<usize>();
+
+        // Both of these will fail if the server is gone, so we only handle the error once:
         let _ = self.tx.send(ControlAMsgs::SayHello { response_tx }).await;
-        response_rx.await.unwrap()
+        response_rx.await.expect("Actor is gone")
     }
 
     async fn say_world(&mut self) {

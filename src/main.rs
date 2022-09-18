@@ -12,13 +12,14 @@ use comp_a::CompA;
 use marshalling::control_a_server_marshalling;
 use std::time;
 
-// ToDo: Return values
+// ToDo:
+// - Investigate shutdown in more detail. Can circular graphs prevent proper shutdown?
 
 #[tokio::main]
 async fn main() {
-    let (mut b_client_port, b_server_rx) = connection::<HelloEventMsgs>();
-    let _b = CompB::new(b_server_rx);
+    let (b_client_port, b_server_rx) = connection::<HelloEventMsgs>();
     let (mut a_client_port, a_server_rx) = connection::<ControlAMsgs>();
+    let _b = CompB::new(b_server_rx);
     let _a = CompA::new(a_server_rx, b_client_port);
 
     a_client_port.say_hello().await;

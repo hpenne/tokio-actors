@@ -6,7 +6,6 @@ use tokio::sync::mpsc::Receiver;
 
 pub struct CompA {}
 
-/// ToDo: Shutdown (task should end on Drop).
 impl CompA {
     pub fn new(mut rx: Receiver<ControlAMsgs>, b_client: ClientMarshaller<HelloEventMsgs>) -> Self {
         tokio::spawn(async move {
