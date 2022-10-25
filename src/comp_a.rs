@@ -1,8 +1,6 @@
-use crate::interfaces::ControlA;
-use crate::marshalling::{hello_event_server_marshalling, ClientMarshaller};
-use crate::{control_a_server_marshalling, ControlAMsgs, HelloEvent, HelloEventMsgs};
-use async_trait::async_trait;
-use tokio::sync::mpsc::UnboundedReceiver;
+use crate::interfaces::{ControlA, HelloEvent};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::oneshot;
 
 pub struct CompA {}
 
@@ -14,23 +12,31 @@ pub struct CompA {}
 /// from the implementation.
 impl CompA {
     pub fn new(
-        mut ctrl_rx: UnboundedReceiver<ControlAMsgs>,
-        mut hello_rx: UnboundedReceiver<HelloEventMsgs>,
-        hello_client: ClientMarshaller<HelloEventMsgs>,
+        mut ctrl_rx: UnboundedReceiver<ControlA>,
+        mut hello_rx: UnboundedReceiver<HelloEvent>,
+        hello_tx: UnboundedSender<HelloEvent>,
     ) -> Self {
         tokio::spawn(async move {
             // That will public sync methods outside the channel-protocols for setup etc.
-            let mut inner = CompAImpl {
-                hello_client,
-                count: 0,
-            };
+            let mut inner = CompAImpl { hello_tx, count: 0 };
             loop {
                 tokio::select! {
                     Some(message) = ctrl_rx.recv() => {
-                        control_a_server_marshalling(message, &mut inner).await;
+                        match message {
+                            ControlA::SayHello{response_tx} => {
+                                inner.say_hello(response_tx).await;
+                            }
+                            ControlA::SayWorld => {
+                                inner.say_world();
+                            }
+                        }
                     }
                     Some(message) = hello_rx.recv() => {
-                        hello_event_server_marshalling(message, &mut inner).await
+                        match message {
+                            HelloEvent::HelloFrom{sender} => {
+                                inner.hello_from(sender);
+                            }
+                        }
                     }
                     else => break,
                 }
@@ -43,17 +49,20 @@ impl CompA {
 /// This and below is the actual implementation of CompA.
 /// This reads cleanly as normal code with no boilerplate
 pub struct CompAImpl {
-    hello_client: ClientMarshaller<HelloEventMsgs>,
+    hello_tx: UnboundedSender<HelloEvent>,
     count: usize,
 }
 
-#[async_trait]
-impl ControlA for CompAImpl {
-    async fn say_hello(&mut self) -> usize {
+impl CompAImpl {
+    async fn say_hello(&mut self, response_tx: oneshot::Sender<usize>) {
         println!("Hello");
-        self.hello_client.hello_from("A".to_owned());
+        self.hello_tx
+            .send(HelloEvent::HelloFrom {
+                sender: "A".to_owned(),
+            })
+            .expect("Actor is gone");
         self.count += 1;
-        self.count
+        response_tx.send(self.count).expect("Actor is gone");
     }
 
     fn say_world(&mut self) {
@@ -61,7 +70,7 @@ impl ControlA for CompAImpl {
     }
 }
 
-impl HelloEvent for CompAImpl {
+impl CompAImpl {
     fn hello_from(&mut self, sender: String) {
         println!("A: Hello from {}", sender);
     }

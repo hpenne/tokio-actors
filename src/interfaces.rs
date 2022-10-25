@@ -1,14 +1,12 @@
-use async_trait::async_trait;
+use tokio::sync::oneshot;
 
-#[async_trait]
-pub trait ControlA {
-    async fn say_hello(&mut self) -> usize;
-
-    // Note that calls where we don't need to wait for the actor's task to process
-    // do not have to be marked async:
-    fn say_world(&mut self);
+#[derive(Debug)]
+pub enum ControlA {
+    SayHello { response_tx: oneshot::Sender<usize> },
+    SayWorld,
 }
 
-pub trait HelloEvent {
-    fn hello_from(&mut self, sender: String);
+#[derive(Debug)]
+pub enum HelloEvent {
+    HelloFrom { sender: String },
 }
